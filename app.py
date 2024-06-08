@@ -1,7 +1,9 @@
+import uuid
+from datetime import datetime
 import json
 import logging
 import redis
-from models import User, Channel
+from models import User, Channel, Stream
 from redis_config import REDIS_HOST, REDIS_PORT, REDIS_DB
 
 
@@ -32,21 +34,62 @@ class RedisClient:
             return Channel(**channel_dict)
         return None
 
+    def produce_message(self, channel_id, message):
+        message_id = str(uuid.uuid4())
+        timestamp = datetime.utcnow().isoformat()
+        message_data = {
+            'id': message_id,
+            'channel_id': channel_id,
+            'message': message,
+            'timestamp': timestamp
+
+        }
+        self.r.xadd(channel_id, message_data)
+        return f"Message produced to stream {channel_id}"
+
     def list_channels(self):
         channels = self.r.hgetall('channels')
         print(channels)
 
     def publish_message(self, channel_id, message):
         self.r.publish(channel_id, message)
+        self.produce_message(channel_id, message)
         print(message)
+
+    def consume_message(self, channel_id):
+        messages = self.r.xrange(channel_id)
+        stream_messages = []
+        for message in messages:
+            message_id, message_data = message
+            stream_message = Stream(
+                id=message_data[b'id'].decode(),
+                channel_id=message_data[b'channel_id'].decode(),
+                message=message_data[b'message'].decode(),
+                timestamp=datetime.fromisoformat(
+                    message_data[b'timestamp'].decode())
+            )
+            stream_messages.append(stream_message)
+            self.r.hset(f"stream:{stream_message.id}", mapping=message_data)
+
+        return f"Consumed {len(stream_messages)} messages from stream {channel_id}"
 
     def subscribe_to_channel(self, channel_id):
         pubsub = self.r.pubsub()
         pubsub.subscribe(channel_id)
+        self.consume_message(channel_id)
         print(f"Subscribed to channel '{channel_id}'")
 
         for message in pubsub.listen():
             if message['type'] == 'message':
                 print(f"Received message: {message['data'].decode('utf-8')}")
+
+    # This function is for sending messages to all channel users
+    def broadcast_message(self, channel_id, message):
+        self.publish_message(channel_id, message)
+        pubsub = self.r.pubsub()
+        pubsub.subscribe(channel_id)
+        pubsub.publish(channel_id, message)
+        return f"Message broadcasted to channel {channel_id}"
+
 
 

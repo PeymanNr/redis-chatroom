@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -12,4 +13,11 @@ class Channel:
     id: str
     name: str
 
+
+@dataclass
+class Stream:
+    id: str
+    channel_id: str
+    message: str
+    timestamp: datetime
 
