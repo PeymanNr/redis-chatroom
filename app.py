@@ -49,7 +49,9 @@ class RedisClient:
 
     def list_channels(self):
         channels = self.r.hgetall('channels')
-        print(channels)
+        for channel_id, channel_data in channels.items():
+            channel_dict = json.loads(channel_data)
+            print(f"Channel ID: {channel_id}, Name: {channel_dict['name']}")
 
     def publish_message(self, channel_id, message):
         self.r.publish(channel_id, message)
@@ -79,9 +81,12 @@ class RedisClient:
         self.consume_message(channel_id)
         print(f"Subscribed to channel '{channel_id}'")
 
-        for message in pubsub.listen():
-            if message['type'] == 'message':
-                print(f"Received message: {message['data'].decode('utf-8')}")
+        with open(f"{channel_id}_messages.log", "w") as log_file:
+            for message in pubsub.listen():
+                if message['type'] == 'message':
+                    log_file.write(
+                        f"Received message: {message['data'].decode('utf-8')}\n")
+                    log_file.flush()
 
     # This function is for sending messages to all channel users
     def broadcast_message(self, channel_id, message):
