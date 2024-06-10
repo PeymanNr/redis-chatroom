@@ -1,8 +1,3 @@
-# This project is currently under development 
-
-
-
-
 **Real-Time Chat App with Redis Pub/Sub and Stream**
 =====================================================
 
@@ -315,21 +310,6 @@ Here is a design for a Terminal UI for the Real-Time Chat App with Redis Pub/Sub
 4. **/send <message>**: Send a message to the current channel.
 5. **/quit**: Quit the app.
 
-**Terminal UI Features:**
-
-1. **Real-time messaging**: Messages are displayed in real-time as they are received from the channel.
-2. **Channel switching**: Users can switch between channels using the `/join` command.
-3. **Message input**: Users can input and send messages using the message input field.
-4. **Message log**: The message log displays a history of messages received from the channel.
-5. **Status bar**: The status bar displays the user's current channel and subscription status.
-
-**Color Scheme:**
-
-1. **Header**: #333 (dark gray)
-2. **Channel List**: #666 (medium gray)
-3. **Message Input**: #999 (light gray)
-4. **Message Log**: #CCC (light gray)
-5. **Status Bar**: #666 (medium gray)
 
 **Font:**
 
